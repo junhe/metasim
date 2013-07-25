@@ -7,22 +7,15 @@
 #include <sstream>
 #include <iterator>
 #include <stdlib.h>
-#include <mpi.h>
 #include <vector>
+#include <queue>
 #include <assert.h>
 
 class HostEntry
 {
     public:
         off_t  logical_offset;
-        off_t  physical_offset;  // I tried so hard to not put this in here
-        // to save some bytes in the index entries
-        // on disk.  But truncate breaks it all.
-        // we assume that each write makes one entry
-        // in the data file and one entry in the index
-        // file.  But when we remove entries and
-        // rewrite the index, then we break this
-        // assumption.  blech.
+        off_t  physical_offset;
         size_t length;
         double begin_timestamp;
         double end_timestamp;
@@ -31,309 +24,85 @@ class HostEntry
 
 using namespace std;
 
-int rank, size;
-MPI_Status stat;
-double openTime = 0, rwTime = 0, closeTime = 0;
-double start, end;
-off_t totalBytes = 0;
-char mode;
-
-void bufferEntries(ifstream &idx_file, MPI_File fh);
-
-int main(int argc, char ** argv)
+class MapFetcher
 {
-    int rc;
-    ifstream idx_file;
-    MPI_File fh;
-
-    MPI_Init (&argc, &argv);/* starts MPI */
-    MPI_Comm_rank (MPI_COMM_WORLD, &rank);/* get current process id */
-    MPI_Comm_size (MPI_COMM_WORLD, &size);/* get number of processes */
-
-    if ( argc != 4 ) {
-        if ( rank == 0 ) {
-            printf("Usage: mpirun -np num-of-proc-in-map-file %s " 
-                   "mapfile output-file r/w\n", argv[0] );
-        }
-        MPI_Finalize();
-        return 0;
-    }
-
-    mode = argv[3][0];
-    if ( rank == 0 ) {
-        if ( mode == 'w' ) {
-            cout << "To Write File" << endl;
-        } else {
-            cout << "To Read File" << endl;
-        }  
-    }
-    printf( "Hello from process %d of %d\n", rank, size );
-
-    //all ranks open a file for writing together
-    start = MPI_Wtime();
-    if ( mode == 'w' ) {
-        rc = MPI_File_open( MPI_COMM_WORLD, argv[2], 
-                      MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh );
-    } else {
-        rc = MPI_File_open( MPI_COMM_WORLD, argv[2], 
-                       MPI_MODE_RDONLY, MPI_INFO_NULL, &fh );
-    }
-    end = MPI_Wtime();
-    openTime = end - start;
-    
-    assert(rc == MPI_SUCCESS);
-
-
-    if ( rank == 0 ) {
-        // Rank 0 opens map file
-        idx_file.open(argv[1]);
-        if (idx_file.is_open()) {
-            cout << "map file is open: " << argv[1]  << endl;
-        } else {
-            cout << "file is not open." << argv[1] << endl;
-            exit(-1);
-        }
-        bufferEntries(idx_file, fh);
-        idx_file.close();
-    } else {
-        // other ranks just receive offset and length from rank 0
-        //static int mywrites = 0;
-        while (1) {
-            int flag = 0; //1: has entry comming, 0:no entry comming
-            int ret;
-            rc = MPI_Recv( &flag, 1, MPI_INT, 0, 1, MPI_COMM_WORLD, &stat );
-            if ( flag == 1 ) {
-                // entry is comming
-                HostEntry entry;
-                rc = MPI_Recv( &entry, sizeof(HostEntry), MPI_CHAR, 0, 1, 
-                               MPI_COMM_WORLD, &stat );
-                
-                string buf(entry.length, 'a'+rank);
-                assert(buf.size()==entry.length);
-                
-                start = MPI_Wtime();
-                if ( mode == 'w' ) {
-                    ret = MPI_File_write_at(fh, entry.logical_offset,
-                            (void *) buf.c_str(),  entry.length, MPI_CHAR, &stat);
-                } else {
-                    ret = MPI_File_read_at(fh, entry.logical_offset,
-                            &buf[0],  entry.length, MPI_CHAR, &stat);
-                }
-                end = MPI_Wtime();
-                rwTime += end - start;
-
-                assert(ret == MPI_SUCCESS);
-                
-                // Get bytes written
-                int cnt;
-                MPI_Get_count( &stat, MPI_CHAR, &cnt );
-                totalBytes += cnt;
-                
-                /*  
-                mywrites++;
-                if ( mywrites % 1024 == 0 ) {
-                    cout <<".";
-                    fflush(stdout);
-                }
-                */
-
-                /*
-                cout << "[" << rank << "] [" << entry.id << "]: " 
-                     << entry.logical_offset << ", " 
-                     << entry.physical_offset << ", "
-                     << entry.length << endl;
-                */
-
-            } else {
-                // no entry is coming. This rank is done.
-                break;
-            }
-        }
-    }
-   
-    cout<<"End of the program"<<endl;
-    
-    start = MPI_Wtime();
-    MPI_File_close(&fh);
-    end = MPI_Wtime();
-    closeTime = end - start;
-
-    cout << "Open Time: " << openTime << endl
-         << "rw Time: " << rwTime << endl
-         << "Close Time: " << closeTime << endl
-         << "total bytes: " << totalBytes << endl;
-
-    double totaltime = openTime + rwTime + closeTime;
-    double aggTotalTime = 0;
-
-    MPI_Reduce( &totaltime, &aggTotalTime, 1, 
-                MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-    off_t aggTotalBytes = 0;
-    MPI_Reduce( &totalBytes, &aggTotalBytes, 1,
-                MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-    if ( rank == 0 ) {
-        cout << "----------- Final Performance ----------" << endl;
-        cout << "Total Time: " << aggTotalTime << endl
-             << "Total Bytes: " << aggTotalBytes << endl;
-        double bandwidth =aggTotalBytes/aggTotalTime;
-        cout << "Bandwidth: " //<< bandwidth << "bytes/sec " 
-             << bandwidth/(1024*1024) << " MB/sec" << endl;
-    }
-
-
-    MPI_Finalize();
-    return 0;
-}
-
-
-void deleteSubStr( string del, string &line ) 
-{
-    size_t found;
-    
-    found = line.find(del);
-    while (found != string::npos) 
-    {
-        line.erase(found, del.size());  
-        found = line.find(del);
-    }
-}
-
-void replaceSubStr( string del, string newstr, string &line, int startpos = 0 ) 
-{
-    size_t found;
-    
-    found = line.find(del, startpos);
-    while (found != string::npos) 
-    {
-        line.replace(found, del.size(), newstr);  
-        found = line.find(del, startpos);
-    }
-}
-
-
-void bufferEntries(ifstream &idx_file, MPI_File fh)
-{
-    //cout << "i am bufferEntries()" << endl;
-    HostEntry h_entry;
-    HostEntry &idx_entry = h_entry;
-    vector<HostEntry> entry_buf;
-    int i,flag;
-
-    int maxprocnum = 0;
-    for ( i = 0 ; idx_file.good(); i++ ) {
-        string line;
-        if (  !idx_file.good()
-              || !getline(idx_file, line).good() 
-              || line.size() < 1)
-        {
-            break;
-        }
-
-        if ( line[0] == '#' ) {
-            cout << "skiping---" << line << endl;
-            continue;
-        }
+    public:
+        ifstream _mapStream;
+        queue <HostEntry> _entryBuf;
+        int _bufSize; // if _bufSize is 0, then read
+                      // from file every time. 
+                      // if not, read from buffer if buffer
+                      // is no empty
         
-        replaceSubStr( "[", " ", line );
-        replaceSubStr( "]", " ", line );
-        replaceSubStr( ".", " ", line, 107 ); //107 is the byte # where chunk info starts
-        //cout << line << endl;
+        int readEntryFromStream(HostEntry &entry);
+        int fetchEntry(HostEntry &entry);
 
-        vector<string> tokens;
-        vector<string>::iterator iter;
+        MapFetcher(int bsize, const char *mapfilename);
+        ~MapFetcher();
+};
+
+MapFetcher::MapFetcher(int bsize, const char *mapfilename)
+    :_bufSize(bsize)
+{ 
+    _mapStream.open(mapfilename);
+    if (_mapStream.is_open()) {
+        cout << "Good, map file (" << mapfilename << ") is open." << endl;
+    } else {
+        cout << "ERROR, map file (" << mapfilename << ") cannot be open." << endl;
+        exit(1);
+    }
+}
+
+MapFetcher::~MapFetcher()
+{
+    _mapStream.close();
+}
+
+// Return 1: got the entry
+// Return EOF: reach the eof of file, entry may have
+//             random data
+int 
+MapFetcher::readEntryFromStream(HostEntry &entry)
+{
+    string line;
+    if (getline(_mapStream, line)) {
         istringstream iss(line);
-        copy(istream_iterator<string>(iss),
-                istream_iterator<string>(),
-                back_inserter<vector<string> >(tokens));
-
-        idx_entry.id = atoi( tokens[7].c_str() );
-        if ( idx_entry.id > maxprocnum ) {
-            maxprocnum = idx_entry.id;
-        }
-        if ( idx_entry.id >= size ) {
-            fprintf(stderr, "num of proc is too small for this map. mapid:%d", idx_entry.id);
-        }
-        assert( idx_entry.id < size );
-
-        stringstream convert(tokens[2]);
-        if ( !(convert >> idx_entry.logical_offset) ) {
-            cout << "error on converting" << endl;
-            exit(-1);
-        }
-
-        convert.clear();
-        convert.str(tokens[3]);
-        if ( !(convert >> idx_entry.length) ) {
-            cout << "error on converting" << endl;
-            exit(-1);
-        }
-
-        convert.clear();
-        convert.str(tokens[8]);
-        if ( !(convert >> idx_entry.physical_offset) ) {
-            cout << "error on converting" << endl;
-            exit(-1);
-        }
-
-
-        if ( h_entry.id == 0 ) {
-            //if it is rank0's job, just do it
-            //static int mywrites = 0;
-            int ret;
-
-            string buf(h_entry.length, 'a'+rank);
-            //cout << buf << endl;
-            assert(buf.size()==h_entry.length);
-            
-            start = MPI_Wtime();
-            if ( mode == 'w' ) {
-                ret = MPI_File_write_at(fh, h_entry.logical_offset, (void *)buf.c_str(), 
-                                  h_entry.length, MPI_CHAR, &stat);
-            } else {
-                ret = MPI_File_read_at(fh, h_entry.logical_offset,
-                        &buf[0],  h_entry.length, MPI_CHAR, &stat);
-            }
-            end = MPI_Wtime();
-            rwTime += end - start;
-           
-            assert(ret == MPI_SUCCESS);
-            
-            // Get bytes written
-            int cnt;
-            MPI_Get_count( &stat, MPI_CHAR, &cnt );
-            totalBytes += cnt;
-
-            
-            
-            //mywrites++;
-            
-            /*
-            cout << "[" << rank << "] [" << h_entry.id << "]: " 
-                 << h_entry.logical_offset << ", " 
-                 << h_entry.physical_offset << ", "
-                 << h_entry.length << endl;
-            */
-            /* 
-            if (mywrites % 1024 == 0) {
-                cout <<".";
-                fflush(stdout);
-            }
-            */
-        } else {
-            flag = 1;
-            MPI_Send(&flag, 1, MPI_INT, h_entry.id, 1, MPI_COMM_WORLD);
-            MPI_Send(&h_entry, sizeof(HostEntry), MPI_CHAR, h_entry.id, 1, 
-                    MPI_COMM_WORLD);
-        }
+        cout << l 
+        return 1;
+    } else {
+        return EOF;
     }
+}
 
-    cout << "all entries in map are handled" << endl;
-    flag = 0;
-    int rankid;
-    for ( rankid = 0 ; rankid <= maxprocnum ; rankid++ ) {
-        MPI_Send(&flag, 1, MPI_INT, rankid, 1, MPI_COMM_WORLD);
+// fetch one entry from buffer, if buffer is
+// empty, read it from map file.
+// Note that when buffer size is set to 0, 
+// it always reads from file.
+//
+// Return number of entries fetched, or EOF (indicating
+// nothing more can be fetched)
+int 
+MapFetcher::fetchEntry(HostEntry &entry)
+{
+    if ( _entryBuf.empty() ) {
+
     }
-    return ;
 }
 
 
+int main(int argc, char **argv)
+{
+    // Open the map txt file
+    // 1. Get an entry from it,
+    // 2. Convert to HostEntry
+    // 3. Write HostEntry to a file named by its pid
+    
+    if (argc < 2) {
+        cout << "Usage: " << argv[0] << "mapfilename" << endl;
+        exit(1);
+    }
+
+    string mapfilename = argv[1];
+    
+    MapFetcher mf(1,  mapfilename.c_str());
+}
