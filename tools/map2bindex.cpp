@@ -83,6 +83,7 @@ class MapFetcher
 MapFetcher::MapFetcher(int bsize, const char *mapfilename)
     :_bufSize(bsize)
 { 
+    assert(_bufSize > 0);
     _mapStream.open(mapfilename);
     if (_mapStream.is_open()) {
         cout << "Good, map file (" << mapfilename << ") is open." << endl;
@@ -106,13 +107,13 @@ MapFetcher::readEntryFromStream(HostEntry &entry)
     string line;
     if (getline(_mapStream, line)) {
         istringstream iss(line);
-        cout << line << endl;
-        if ( line2entry( line, entry ) == 0 ) {
-            cout << entry.show() << endl; 
-        } else {
+        
+        if ( !line2entry( line, entry ) == 0 ) {
             cerr << "failed to line2entry()" << endl;
+            exit(-1);
+        } else {
+            return 1;
         }
-        return 1;
     } else {
         return EOF;
     }
@@ -131,7 +132,6 @@ MapFetcher::line2entry(string line, HostEntry &hentry)
             return -1;
         } else {
             // it is a valid plfs map row
-            cerr << "it is a valid line" << endl;
 
             // remove the weird symbols
             replaceSubStr( "[", " ", line );
@@ -198,17 +198,39 @@ MapFetcher::line2entry(string line, HostEntry &hentry)
 
 // fetch one entry from buffer, if buffer is
 // empty, read it from map file.
-// Note that when buffer size is set to 0, 
-// it always reads from file.
+// Note that when buffer size should be at least 1
 //
 // Return number of entries fetched, or EOF (indicating
-// nothing more can be fetched)
+// nothing more can be fetched (EOF and empty buffer))
 int 
 MapFetcher::fetchEntry(HostEntry &entry)
 {
+    // Fill buffer if it is empty
     if ( _entryBuf.empty() ) {
-
+        int cnt = 0;
+        while ( cnt < _bufSize ) {
+            HostEntry lp_entry;
+            int ret;
+            ret = readEntryFromStream(lp_entry);
+            if ( ret == 1 ) {
+                _entryBuf.push(lp_entry);
+                cnt++;
+            } else {
+                // ret == EOF
+                if ( cnt == 0 ) {
+                    // empty buffer and empty file
+                    return EOF;
+                } else {
+                    break;
+                }
+            }
+        } // while
     }
+    
+    assert(!_entryBuf.empty());
+    entry = _entryBuf.front(); // the oldest entry
+    _entryBuf.pop();
+    return 1;
 }
 
 
@@ -228,7 +250,7 @@ int main(int argc, char **argv)
     
     MapFetcher mf(1,  mapfilename.c_str());
     HostEntry hentry;
-    mf.readEntryFromStream(hentry);
-
+    while ( mf.fetchEntry(hentry) != EOF ) 
+        cout << hentry.show() << endl;
 
 }
