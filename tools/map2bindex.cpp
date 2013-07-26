@@ -219,7 +219,7 @@ int main(int argc, char **argv)
     
     MapFetcher mf(10,  mapfilename.c_str());
     HostEntry hentry;
-    Index index;
+    Index index("dropping.index");
 
     while ( mf.fetchEntry(hentry) != EOF ) {
         cout << hentry.show() << endl;
@@ -227,4 +227,10 @@ int main(int argc, char **argv)
     }
 
     cout << "index size:" << index._hostIndex.size() << endl;
+    cout << "flushing to file" << endl;
+    index.flush();
+    cout << sizeof(off_t) <<endl;
 }
+
+
+

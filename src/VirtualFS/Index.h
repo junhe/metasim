@@ -21,12 +21,18 @@ class HostEntry
 class Index {
     public:
         std::vector< HostEntry > _hostIndex;
-        void addEntry( const HostEntry &entry );
 
-        string _physical_path; // the physical path of the index file of this index
+        std::string _physical_path; // the physical path of the index file of this index
         int    _index_fd;      // the handle of the index file
 
-        Index(char *physical_path);
+        
+        
+        Index(const char *physical_path);
+        Index(); // use this one if you don't want a file open for this index
+        ~Index();
+        
+        void addEntry( const HostEntry &entry );
+        int flush();
 };
 
 #endif
