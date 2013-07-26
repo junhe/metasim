@@ -11,6 +11,22 @@
 #include <queue>
 #include <assert.h>
 
+using namespace std;
+
+
+void replaceSubStr( string del, string newstr, string &line, int startpos = 0 ) 
+{
+    size_t found;
+    
+    found = line.find(del, startpos);
+    while (found != string::npos) 
+    {
+        line.replace(found, del.size(), newstr);  
+        found = line.find(del, startpos);
+    }
+}
+
+
 class HostEntry
 {
     public:
@@ -20,9 +36,29 @@ class HostEntry
         double begin_timestamp;
         double end_timestamp;
         pid_t  id;      // needs to be last so no padding
+
+        string show();
 };
 
-using namespace std;
+string HostEntry::show()
+{
+    ostringstream oss;
+
+    oss.precision(26);
+    oss << id 
+        << " "
+        << logical_offset
+        << " "
+        << length
+        << " "
+        << physical_offset
+        << " "
+        << begin_timestamp
+        << " "
+        << end_timestamp
+        << " ";
+    return oss.str();
+}
 
 class MapFetcher
 {
@@ -39,6 +75,9 @@ class MapFetcher
 
         MapFetcher(int bsize, const char *mapfilename);
         ~MapFetcher();
+    
+    private:
+        int line2entry(string line, HostEntry &hentry);
 };
 
 MapFetcher::MapFetcher(int bsize, const char *mapfilename)
@@ -67,10 +106,93 @@ MapFetcher::readEntryFromStream(HostEntry &entry)
     string line;
     if (getline(_mapStream, line)) {
         istringstream iss(line);
-        cout << l 
+        cout << line << endl;
+        if ( line2entry( line, entry ) == 0 ) {
+            cout << entry.show() << endl; 
+        } else {
+            cerr << "failed to line2entry()" << endl;
+        }
         return 1;
     } else {
         return EOF;
+    }
+}
+
+// convert a text line to a HostEntry
+// return -1: not a valid plfs map entry
+// return 0: success
+int
+MapFetcher::line2entry(string line, HostEntry &hentry)
+{
+    if ( line.length() > 0 ) {
+        if ( line[0] == '#' ) {
+            // it is a comment line
+            cerr << "it is a comment line" << endl;
+            return -1;
+        } else {
+            // it is a valid plfs map row
+            cerr << "it is a valid line" << endl;
+
+            // remove the weird symbols
+            replaceSubStr( "[", " ", line );
+            replaceSubStr( "]", " ", line );
+            replaceSubStr( ".", " ", line, 107 ); //107 is the byte # where chunk info starts
+
+            vector<string> tokens;
+            vector<string>::iterator iter;
+            istringstream iss(line);
+            copy(istream_iterator<string>(iss),
+                istream_iterator<string>(),
+                back_inserter<vector<string> >(tokens));
+           
+            // pid
+            hentry.id = atoi( tokens[7].c_str() );
+
+            // logical offset
+            stringstream convert(tokens[2]);
+            if ( !(convert >> hentry.logical_offset) ) {
+                cout << "error on converting" << endl;
+                exit(-1);
+            }
+            
+            // length
+            convert.clear();
+            convert.str(tokens[3]);
+            if ( !(convert >> hentry.length) ) {
+                cout << "error on converting" << endl;
+                exit(-1);
+            }
+
+            // begin_timestamp
+            convert.clear();
+            convert.str(tokens[4]);
+            if ( !(convert >> hentry.begin_timestamp) ) {
+                cout << "error on converting" << endl;
+                exit(-1);
+            }
+            
+            // end_timestamp
+            convert.clear();
+            convert.str(tokens[5]);
+            if ( !(convert >> hentry.end_timestamp) ) {
+                cout << "error on converting" << endl;
+                exit(-1);
+            }
+
+            // physical offset
+            convert.clear();
+            convert.str(tokens[8]);
+            if ( !(convert >> hentry.physical_offset) ) {
+                cout << "error on converting" << endl;
+                exit(-1);
+            }
+            
+            return 0;
+        }
+    } else {
+        // line has zero size
+        cerr << "line has zero size" << endl;
+        return -1;
     }
 }
 
@@ -105,4 +227,8 @@ int main(int argc, char **argv)
     string mapfilename = argv[1];
     
     MapFetcher mf(1,  mapfilename.c_str());
+    HostEntry hentry;
+    mf.readEntryFromStream(hentry);
+
+
 }
