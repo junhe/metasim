@@ -219,7 +219,12 @@ int main(int argc, char **argv)
     
     MapFetcher mf(10,  mapfilename.c_str());
     HostEntry hentry;
-    while ( mf.fetchEntry(hentry) != EOF ) 
-        cout << hentry.show() << endl;
+    Index index;
 
+    while ( mf.fetchEntry(hentry) != EOF ) {
+        cout << hentry.show() << endl;
+        index.addEntry(hentry);
+    }
+
+    cout << "index size:" << index._hostIndex.size() << endl;
 }
