@@ -230,6 +230,9 @@ int main(int argc, char **argv)
     cout << "flushing to file" << endl;
     index.flush();
     cout << sizeof(off_t) <<endl;
+    cout << sizeof(HostEntry) <<endl;
+    cout << sizeof(size_t) << endl;
+    cout << sizeof(pid_t) << endl;
 }
 
 
