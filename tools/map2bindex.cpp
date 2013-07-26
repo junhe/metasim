@@ -11,6 +11,8 @@
 #include <queue>
 #include <assert.h>
 
+#include "Index.h"
+
 using namespace std;
 
 
@@ -26,39 +28,6 @@ void replaceSubStr( string del, string newstr, string &line, int startpos = 0 )
     }
 }
 
-
-class HostEntry
-{
-    public:
-        off_t  logical_offset;
-        off_t  physical_offset;
-        size_t length;
-        double begin_timestamp;
-        double end_timestamp;
-        pid_t  id;      // needs to be last so no padding
-
-        string show();
-};
-
-string HostEntry::show()
-{
-    ostringstream oss;
-
-    oss.precision(26);
-    oss << id 
-        << " "
-        << logical_offset
-        << " "
-        << length
-        << " "
-        << physical_offset
-        << " "
-        << begin_timestamp
-        << " "
-        << end_timestamp
-        << " ";
-    return oss.str();
-}
 
 class MapFetcher
 {
@@ -248,7 +217,7 @@ int main(int argc, char **argv)
 
     string mapfilename = argv[1];
     
-    MapFetcher mf(1,  mapfilename.c_str());
+    MapFetcher mf(10,  mapfilename.c_str());
     HostEntry hentry;
     while ( mf.fetchEntry(hentry) != EOF ) 
         cout << hentry.show() << endl;
