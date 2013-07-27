@@ -6,5 +6,5 @@ include_directories (${Metasim_SOURCE_DIR}/src)
 link_directories (${Metasim_SOURCE_DIR}/src)
 
 add_executable(map2bindex map2bindex.cpp)
-target_link_libraries(map2bindex Index Util)
+target_link_libraries(map2bindex Index Util MapFetcher)
 
