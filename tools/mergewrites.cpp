@@ -1,3 +1,7 @@
+/* 
+ * Usage: mpirun -np num-of-proc-in-map-file ./xmain mapfile outputfile
+ */
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
