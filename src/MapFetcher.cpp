@@ -19,9 +19,7 @@ MapFetcher::MapFetcher(int bsize, const char *mapfilename)
 { 
     assert(_bufSize > 0);
     _mapStream.open(mapfilename);
-    if (_mapStream.is_open()) {
-        cout << "Good, map file (" << mapfilename << ") is open." << endl;
-    } else {
+    if (! _mapStream.is_open()) {
         cout << "ERROR, map file (" << mapfilename << ") cannot be open." << endl;
         exit(1);
     }
@@ -141,31 +139,41 @@ MapFetcher::fetchEntry(HostEntry &entry)
 {
     // Fill buffer if it is empty
     if ( _entryBuf.empty() ) {
-        int cnt = 0;
-        while ( cnt < _bufSize ) {
-            HostEntry lp_entry;
-            int ret;
-            ret = readEntryFromStream(lp_entry);
-            if ( ret == 1 ) {
-                _entryBuf.push(lp_entry);
-                cnt++;
-            } else {
-                // ret == EOF
-                if ( cnt == 0 ) {
-                    // empty buffer and empty file
-                    return EOF;
-                } else {
-                    break;
-                }
-            }
-        } // while
+        if ( fillBuffer() == 0 ) {
+            // buffer is empty due to empty source
+            return EOF;
+        }
     }
-    
+
     assert(!_entryBuf.empty());
     entry = _entryBuf.front(); // the oldest entry
     _entryBuf.pop();
     return 1;
 }
+
+// It tries to fill up the buffer, but it can fail
+// when the source (plfs map file) is empty.
+// Let me assume that's the only reason. When it returns
+// < buffer size, you know the source is empty.
+int
+MapFetcher::fillBuffer()
+{
+    int nleft = _bufSize - _entryBuf.size();
+    while ( nleft > 0 ) {
+        HostEntry lp_entry;
+        int ret;
+        ret = readEntryFromStream(lp_entry);
+        if ( ret == 1 ) {
+            _entryBuf.push(lp_entry);
+            nleft--;
+        } else {
+            // ret == EOF
+            break;
+        }
+    }   
+    return (_bufSize - nleft);
+}
+
 
 
 

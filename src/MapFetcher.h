@@ -15,6 +15,7 @@ class MapFetcher
         
         int readEntryFromStream(HostEntry &entry);
         int fetchEntry(HostEntry &entry);
+        int fillBuffer();
 
         MapFetcher(int bsize, const char *mapfilename);
         ~MapFetcher();
