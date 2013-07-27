@@ -24,7 +24,7 @@ int main(int argc, char **argv)
     if (argc < 3) {
         cout << "Usage: " << argv[0] 
              << " mapfilename" 
-             << " FetchBuffer" 
+             << " FetchBufferSize" 
              //<< " IndexWriteBuffer" 
              << endl;
         exit(1);

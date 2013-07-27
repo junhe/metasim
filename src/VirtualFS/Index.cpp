@@ -46,8 +46,8 @@ Index::Index(const char *physical_path)
     assert( _index_fd != -1 );
 }
 
-
 Index::Index()
+    : _index_fd(-1)
 {
 }
 

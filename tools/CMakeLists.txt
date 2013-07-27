@@ -8,3 +8,6 @@ link_directories (${Metasim_SOURCE_DIR}/src)
 add_executable(map2bindex map2bindex.cpp)
 target_link_libraries(map2bindex Index Util MapFetcher)
 
+add_executable(mergewrites mergewrites.cpp)
+target_link_libraries(mergewrites Index Util MapFetcher)
+
