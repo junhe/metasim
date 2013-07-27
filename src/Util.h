@@ -9,6 +9,9 @@ class Util {
         static void replaceSubStr( std::string del, 
                                    std::string newstr, 
                                    std::string &line, int startpos = 0 );
+        static struct timeval Gettime();
+        static double GetTimeDurAB(struct timeval a,
+                                   struct timeval b);
 };
 
 

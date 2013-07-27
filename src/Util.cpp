@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string>
+#include <time.h>
+#include <sys/time.h>
 
 #include "Util.h"
 
@@ -58,6 +60,23 @@ Util::replaceSubStr( string del, string newstr, string &line, int startpos)
         line.replace(found, del.size(), newstr);  
         found = line.find(del, startpos);
     }
+}
+
+struct timeval 
+Util::Gettime()
+{
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    return t;
+}
+
+double
+Util::GetTimeDurAB(struct timeval a,
+                   struct timeval b)
+{
+    struct timeval dur;
+    timersub(&b, &a, &dur);
+    return dur.tv_sec + dur.tv_usec/1000000.0;
 }
 
 

@@ -13,6 +13,7 @@
 #include <map>
 
 #include "Index.h"
+#include "Util.h"
 #include "MapFetcher.h"
 
 using namespace std;
@@ -24,14 +25,20 @@ int main(int argc, char **argv)
     // 2. Convert to HostEntry
     // 3. Write HostEntry to a file named by its pid
     
-    if (argc < 2) {
-        cout << "Usage: " << argv[0] << "mapfilename" << endl;
+    if (argc < 3) {
+        cout << "Usage: " << argv[0] 
+             << " mapfilename" 
+             << " FetchBuffer" 
+             //<< " IndexWriteBuffer" 
+             << endl;
         exit(1);
     }
 
     string mapfilename = argv[1];
+    int iFetchSize = atoi(argv[2]);
+    //int iWriteBufSize = atoi(argv[3]);
     
-    MapFetcher mf(1000,  mapfilename.c_str());
+    MapFetcher mf(iFetchSize,  mapfilename.c_str());
     HostEntry hentry; // a temp entry holder
 
     // This map is very tricky. If you don't use pointer to Index,
@@ -39,7 +46,14 @@ int main(int argc, char **argv)
     // i close the file when destructing the object, then the
     // fd passed in is no long valid.
     map< pid_t, Index* > index_pool; // hold the indice that we have
-    
+    mf.fillBuffer(); // fill it first, since sometimes I want all entries
+                     // are in memory before timing.
+   
+    struct timeval start, end;
+    double result;
+
+    int cnt = 0;
+    start = Util::Gettime();
     while ( mf.fetchEntry(hentry) != EOF ) {
         //cout << hentry.show() << endl;
         if ( index_pool.count(hentry.id) == 0 ) {
@@ -48,9 +62,9 @@ int main(int argc, char **argv)
             fname << "dropping.index." << hentry.id;
 
             index_pool[hentry.id] = new Index(fname.str().c_str());
-        } else {
-            index_pool[hentry.id]->addEntry(hentry);
         }
+        index_pool[hentry.id]->addEntry(hentry);
+        cnt++;
     }
 
     // explicitly flush index
@@ -62,8 +76,11 @@ int main(int argc, char **argv)
         delete it->second;
     }
 
-
-
+    end = Util::Gettime();
+    result = Util::GetTimeDurAB(start, end);
+    cout << "cnt: " << cnt << endl
+         << "time: " << result << endl
+         << "speed: " << (cnt/result) << endl;
 }
 
 
