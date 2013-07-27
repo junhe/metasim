@@ -2,6 +2,7 @@
 #define __Index_H__
 
 #include <string>
+#include <map>
 #include <vector>
 
 class HostEntry
@@ -17,13 +18,15 @@ class HostEntry
         std::string show();
 };
 
-
+// An Index can only be flushed to one file
+// It can hold indices of many pid's. 
 class Index {
     public:
         std::vector< HostEntry > _hostIndex;
 
         std::string _physical_path; // the physical path of the index file of this index
         int    _index_fd;      // the handle of the index file
+        std::map <pid_t, off_t> _physical_offsets;
 
         
         
@@ -32,6 +35,8 @@ class Index {
         ~Index();
         
         void addEntry( const HostEntry &entry );
+        void addWrite( off_t offset, size_t length, pid_t pid,
+                       double begin_timestamp, double end_timestamp );
         int flush();
 };
 
