@@ -34,14 +34,21 @@ using namespace std;
 class Performance {
     public:
         map<string, vector<string> > _data;
+        int _colwidth; // column width
         
         void put(const char *key, const char *val);
         void put(const char *key, int val);
         void put(const char *key, double val);
         void put(const char *key, float val);
         string showColumns();
+
+        Performance(int colwidth);
 };
 
+Performance::Performance(int colwidth = 15)
+    :_colwidth(colwidth)
+{
+}
 
 string 
 Performance::showColumns()
@@ -60,7 +67,7 @@ Performance::showColumns()
             maxdepth = it->second.size();
         }
     }
-    oss << "MYHEADERMARKER" << endl;
+    oss << "MYHEADERROWMARKER" << endl;
 
     // print performance data
     //
@@ -75,7 +82,7 @@ Performance::showColumns()
             oss << setw(15) << vals.at(i) << " ";
         }
     }
-    oss << "DATAMARKER" << endl;
+    oss << "DATAROWMARKER" << endl;
     return oss.str();
 }
 
