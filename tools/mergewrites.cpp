@@ -99,6 +99,7 @@ int main(int argc, char **argv)
 
     // Print performance results
     Performance perfs;
+    perfs.put("prog_name", argv[0]);
     perfs.put("cnt", cnt);
     perfs.put("time", result);
     perfs.put("speed", (cnt/result));
