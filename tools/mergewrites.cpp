@@ -33,18 +33,20 @@ using namespace std;
 int main(int argc, char **argv)
 {
     // Handle the program arguments
-    if (argc < 4) {
+    if (argc < 5) {
         cout << "Usage: " << argv[0] 
              << " mapfilename" 
              << " FetchBuffer" 
-             << " Merge"
+             << " DoMerge"
+             << " DoSort"
              << endl;
         exit(1);
     }
 
     string mapfilename = argv[1];
     int iFetchSize = atoi(argv[2]);
-    bool iMerge = (bool)atoi(argv[3]);
+    bool iDoMerge = (bool)atoi(argv[3]);
+    bool iDoSort = (bool)atoi(argv[4]);
     
     // Initial MapFetcher
     MapFetcher mf(iFetchSize,  mapfilename.c_str());
@@ -66,7 +68,7 @@ int main(int argc, char **argv)
         //cout << hentry.show() << endl;
         if ( index_pool.count(hentry.id) == 0 ) {
             // index for this pid is not in pool
-            index_pool[hentry.id] = new Index(iMerge);
+            index_pool[hentry.id] = new Index(iDoMerge);
         }
         //cout << hentry.show() << endl;
         index_pool[hentry.id]->addWrite(
@@ -88,8 +90,10 @@ int main(int argc, char **argv)
     map<pid_t, Index*>::iterator it;
     for (it = index_pool.begin() ; it != index_pool.end() ; ++it) {
         newcnt += it->second->_hostIndex.size();
-        it->second->sortEntries(); // sort entries
-        cout << it->second->show();
+        if (iDoSort) {
+            it->second->sortEntries(); // sort entries
+        }
+        //cout << it->second->show();
         delete it->second;
     }
 
@@ -99,7 +103,8 @@ int main(int argc, char **argv)
     perfs.put("time", result);
     perfs.put("speed", (cnt/result));
     perfs.put("final_size", newcnt);
-    perfs.put("merging", iMerge);
+    perfs.put("do_merging", iDoMerge);
+    perfs.put("do_sort", iDoMerge);
 
     cout << perfs.showColumns();
 
