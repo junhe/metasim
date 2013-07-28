@@ -109,7 +109,7 @@ Performance::showColumns()
           it != _data.end() ;
           ++it )
     {
-        oss << setw(15) << it->first << " ";
+        oss << setw(_colwidth) << it->first << " ";
         if ( maxdepth < it->second.size() ) {
             maxdepth = it->second.size();
         }
@@ -126,7 +126,7 @@ Performance::showColumns()
         {
             vector<string> &vals = it->second; // for short
             assert(vals.size() == maxdepth);
-            oss << setw(15) << vals.at(i) << " ";
+            oss << setw(_colwidth) << vals.at(i) << " ";
         }
     }
     oss << "DATAROWMARKER" << endl;
