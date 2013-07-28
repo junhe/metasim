@@ -37,17 +37,20 @@ HostEntry::show()
     return oss.str();
 }
 
-Index::Index(const char *physical_path)
+Index::Index(const char *physical_path, bool compress_contiguous)
     : _physical_path(physical_path),
-      _index_fd(-1)
+      _index_fd(-1),
+      _compress_contiguous(compress_contiguous)
+
 {
     // open physical file for index
     _index_fd = Util::Open(_physical_path.c_str(), O_CREAT|O_WRONLY);
     assert( _index_fd != -1 );
 }
 
-Index::Index()
-    : _index_fd(-1)
+Index::Index(bool compress_contiguous)
+    : _index_fd(-1),
+      _compress_contiguous(compress_contiguous)
 {
 }
 
@@ -94,18 +97,18 @@ Index::addWrite( off_t offset, size_t length, pid_t pid,
                double begin_timestamp, double end_timestamp )
 {
     // check whether incoming abuts with last and we want to compress
-    bool compress_contiguous = true;
-    if ( compress_contiguous && !_hostIndex.empty() &&
+    if ( _compress_contiguous && !_hostIndex.empty() &&
             _hostIndex.back().id == pid  &&
             _hostIndex.back().logical_offset +
             (off_t)_hostIndex.back().length == offset) {
-        printf("Merged new write with last at offset %ld."
-             " New length is %d.\n",
-             (long)_hostIndex.back().logical_offset,
-             (int)_hostIndex.back().length );
         _hostIndex.back().end_timestamp = end_timestamp;
         _hostIndex.back().length += length;
         _physical_offsets[pid] += length;
+        /* printf("Merged new write with last at offset %ld."
+             " New length is %d.\n",
+             (long)_hostIndex.back().logical_offset,
+             (int)_hostIndex.back().length );
+        */
     } else {
         // create a new index entry for this write
         HostEntry entry;

@@ -23,15 +23,14 @@ class HostEntry
 class Index {
     public:
         std::vector< HostEntry > _hostIndex;
-
         std::string _physical_path; // the physical path of the index file of this index
         int    _index_fd;      // the handle of the index file
         std::map <pid_t, off_t> _physical_offsets;
+        bool _compress_contiguous;
+       
 
-        
-        
-        Index(const char *physical_path);
-        Index(); // use this one if you don't want a file open for this index
+        Index(const char *physical_path, bool compress_contiguous=false);
+        Index(bool compress_contiguous=false); // use this one if you don't want a file open for this index
         ~Index();
         
         void addEntry( const HostEntry &entry );

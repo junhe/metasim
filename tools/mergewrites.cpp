@@ -22,6 +22,7 @@
 #include <queue>
 #include <assert.h>
 #include <map>
+#include <iomanip>
 
 #include "Index.h"
 #include "Util.h"
@@ -32,16 +33,18 @@ using namespace std;
 int main(int argc, char **argv)
 {
     // Handle the program arguments
-    if (argc < 3) {
+    if (argc < 4) {
         cout << "Usage: " << argv[0] 
              << " mapfilename" 
              << " FetchBuffer" 
+             << " Merge"
              << endl;
         exit(1);
     }
 
     string mapfilename = argv[1];
     int iFetchSize = atoi(argv[2]);
+    bool iMerge = (bool)atoi(argv[3]);
     
     // Initial MapFetcher
     MapFetcher mf(iFetchSize,  mapfilename.c_str());
@@ -63,8 +66,9 @@ int main(int argc, char **argv)
         //cout << hentry.show() << endl;
         if ( index_pool.count(hentry.id) == 0 ) {
             // index for this pid is not in pool
-            index_pool[hentry.id] = new Index();
+            index_pool[hentry.id] = new Index(iMerge);
         }
+        //cout << hentry.show() << endl;
         index_pool[hentry.id]->addWrite(
                 hentry.logical_offset,
                 hentry.length,
@@ -78,16 +82,23 @@ int main(int argc, char **argv)
 
     end = Util::Gettime();
     result = Util::GetTimeDurAB(start, end);
-    cout << "cnt: " << cnt << endl
-         << "time: " << result << endl
-         << "speed: " << (cnt/result) << endl;
+    cout << setw(10) << "cnt: " 
+                << setw(10) << cnt << endl
+         << setw(10) << "time: " 
+                << setw(10) << result << endl
+         << setw(10) << "speed: " 
+                << setw(10) << (cnt/result) << endl;
 
 
     // clean up
+    int newcnt = 0;
     map<pid_t, Index*>::iterator it;
     for (it = index_pool.begin() ; it != index_pool.end() ; ++it) {
+        newcnt += it->second->_hostIndex.size();
         delete it->second;
     }
+    cout << "Final size:" << newcnt << endl;
+    cout << "merging:" << iMerge << endl;
 
 }
 
