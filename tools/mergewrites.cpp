@@ -30,97 +30,6 @@
 
 using namespace std;
 
-
-class Performance {
-    public:
-        map<string, vector<string> > _data;
-        int _colwidth; // column width
-        
-        void put(const char *key, const char *val);
-        void put(const char *key, int val);
-        void put(const char *key, double val);
-        void put(const char *key, float val);
-        string showColumns();
-
-        Performance(int colwidth);
-};
-
-Performance::Performance(int colwidth = 15)
-    :_colwidth(colwidth)
-{
-}
-
-string 
-Performance::showColumns()
-{
-    ostringstream oss;
-    map<string, vector<string> >::iterator it;
-
-    // print header
-    vector<string>::size_type maxdepth = 0;
-    for ( it = _data.begin() ;
-          it != _data.end() ;
-          ++it )
-    {
-        oss << setw(15) << it->first << " ";
-        if ( maxdepth < it->second.size() ) {
-            maxdepth = it->second.size();
-        }
-    }
-    oss << "MYHEADERROWMARKER" << endl;
-
-    // print performance data
-    //
-    vector<string>::size_type i;
-    for ( i = 0 ; i < maxdepth ; i++ ) {
-        for ( it = _data.begin() ;
-              it != _data.end() ;
-              ++it )
-        {
-            vector<string> &vals = it->second; // for short
-            assert(vals.size() == maxdepth);
-            oss << setw(15) << vals.at(i) << " ";
-        }
-    }
-    oss << "DATAROWMARKER" << endl;
-    return oss.str();
-}
-
-void 
-Performance::put(const char *key, const char *val)
-{
-    string keystr = string(key);
-    if (_data.count(keystr) == 0) {
-        _data[keystr] = vector<string>();
-    }
-    _data[keystr].push_back( string(val) );
-}
-
-void
-Performance::put(const char *key, int val)
-{
-    ostringstream oss;
-    oss << val;
-    put(key, oss.str().c_str());
-}
-
-void
-Performance::put(const char *key, double val)
-{
-    ostringstream oss;
-    oss << val;
-    put(key, oss.str().c_str());
-}
-
-void
-Performance::put(const char *key, float val)
-{
-    ostringstream oss;
-    oss << val;
-    put(key, oss.str().c_str());
-}
-
-
 int main(int argc, char **argv)
 {
     // Handle the program arguments
@@ -174,11 +83,6 @@ int main(int argc, char **argv)
     end = Util::Gettime();
     result = Util::GetTimeDurAB(start, end);
 
-    Performance perfs;
-    perfs.put("cnt", cnt);
-    perfs.put("time", result);
-    perfs.put("speed", (cnt/result));
-
     // clean up
     int newcnt = 0;
     map<pid_t, Index*>::iterator it;
@@ -186,6 +90,12 @@ int main(int argc, char **argv)
         newcnt += it->second->_hostIndex.size();
         delete it->second;
     }
+
+    // Print performance results
+    Performance perfs;
+    perfs.put("cnt", cnt);
+    perfs.put("time", result);
+    perfs.put("speed", (cnt/result));
     perfs.put("final_size", newcnt);
     perfs.put("merging", iMerge);
 
