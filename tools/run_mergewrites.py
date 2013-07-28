@@ -19,8 +19,10 @@ mapfile = [mappath+s for s in mapfile]
 fetch_buf_size = ["100", "500"]
 domerge = ["0", "1"]
 dosort = ["0", "1"]
+doflush = ["0", "1"]
+flushdir = ["./flushdir"]
 
-parameters = [mapfile, fetch_buf_size, domerge, dosort]
+parameters = [mapfile, fetch_buf_size, domerge, dosort, doflush, flushdir]
 paralist = list(itertools.product(*parameters))
 
 jobid = strftime("%Y-%m-%d-%H-%M-%S", gmtime())
