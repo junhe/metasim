@@ -15,7 +15,7 @@ class HostEntry
         double end_timestamp;
         pid_t  id;      // needs to be last so no padding
 
-        std::string show();
+        std::string show() const;
         static bool compareLogical_offset(
                             const HostEntry &a, const HostEntry &b);
 };
@@ -40,6 +40,7 @@ class Index {
                        double begin_timestamp, double end_timestamp );
         int flush();
         void sortEntries();
+        std::string show() const;
 };
 
 #endif

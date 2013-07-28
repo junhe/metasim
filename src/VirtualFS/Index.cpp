@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm>
 
 #include "Index.h"
 #include "Util.h"
@@ -20,7 +21,7 @@ using namespace std;
 // HostEntry
 
 string
-HostEntry::show()
+HostEntry::show() const
 {
     ostringstream oss;
 
@@ -146,4 +147,26 @@ Index::addWrite( off_t offset, size_t length, pid_t pid,
         // It seems that we can store this pid for the global entry
     }
 }
+
+void
+Index::sortEntries()
+{
+    sort(_hostIndex.begin(), _hostIndex.end(), HostEntry::compareLogical_offset);
+}
+
+string
+Index::show() const
+{
+    ostringstream oss;
+    vector<HostEntry>::const_iterator it;
+    for ( it =  _hostIndex.begin() ;
+          it != _hostIndex.end() ;
+          ++it ) 
+    {
+        oss << it->show() << endl;
+    }
+
+    return oss.str();
+}
+
 

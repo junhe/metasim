@@ -88,6 +88,8 @@ int main(int argc, char **argv)
     map<pid_t, Index*>::iterator it;
     for (it = index_pool.begin() ; it != index_pool.end() ; ++it) {
         newcnt += it->second->_hostIndex.size();
+        it->second->sortEntries(); // sort entries
+        cout << it->second->show();
         delete it->second;
     }
 
