@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <utility>
 
 class HostEntry
 {
@@ -18,13 +19,26 @@ class HostEntry
         std::string show() const;
         static bool compareLogical_offset(
                             const HostEntry &a, const HostEntry &b);
+        
+        friend class Index;
 };
+
+class GlobalEntry: public HostEntry
+{
+    public:
+        pid_t original_chunk;
+    
+    friend class Index;
+}; 
+
+
 
 // An Index can only be flushed to one file
 // It can hold indices of many pid's. 
 class Index {
     public:
         std::vector< HostEntry > _hostIndex;
+        std::map< off_t, GlobalEntry > _globalIndex;
         std::string _physical_path; // the physical path of the index file of this index
         int    _index_fd;      // the handle of the index file
         std::map <pid_t, off_t> _physical_offsets;
@@ -41,6 +55,8 @@ class Index {
         int flush();
         void sortEntries();
         std::string show() const;
+        std::pair<std::map<off_t,GlobalEntry>::iterator,bool> insertGlobalEntry(
+                            GlobalEntry *g_entry);
 };
 
 #endif

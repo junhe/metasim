@@ -169,4 +169,11 @@ Index::show() const
     return oss.str();
 }
 
+pair<map<off_t,GlobalEntry>::iterator,bool> 
+Index::insertGlobalEntry( GlobalEntry *g_entry ) 
+{
+    return _globalIndex.insert(
+               pair<off_t,GlobalEntry>( g_entry->logical_offset,
+                                           *g_entry ) );
+}
 
