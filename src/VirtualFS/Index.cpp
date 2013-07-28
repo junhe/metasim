@@ -16,6 +16,9 @@
 
 using namespace std;
 
+//////////////////////////////////////////////////////////////
+// HostEntry
+
 string
 HostEntry::show()
 {
@@ -36,6 +39,17 @@ HostEntry::show()
         << " ";
     return oss.str();
 }
+
+bool 
+HostEntry::compareLogical_offset(
+        const HostEntry &a, const HostEntry &b)
+{
+    return a.logical_offset < b.logical_offset;
+}
+
+
+///////////////////////////////////////////////////////////////
+// Index
 
 Index::Index(const char *physical_path, bool compress_contiguous)
     : _physical_path(physical_path),

@@ -16,6 +16,8 @@ class HostEntry
         pid_t  id;      // needs to be last so no padding
 
         std::string show();
+        static bool compareLogical_offset(
+                            const HostEntry &a, const HostEntry &b);
 };
 
 // An Index can only be flushed to one file
@@ -37,6 +39,7 @@ class Index {
         void addWrite( off_t offset, size_t length, pid_t pid,
                        double begin_timestamp, double end_timestamp );
         int flush();
+        void sortEntries();
 };
 
 #endif
