@@ -206,7 +206,7 @@ Index::readIndex(string physicalpath)
         insertGlobalEntry(&g_entry);
     }
 
-    cout << "Entries in total:" << entries << endl;
+    //cout << "Entries in total:" << entries << endl;
 
     return 0;
 }
@@ -230,7 +230,7 @@ Index::mapIndex(void **ibufp, string physicalpath, int *xfd,
         return -1;
     }
 
-    cout << "file size:" << *length << endl;
+    //cout << "file size:" << *length << endl;
     
     *ibufp = Util::GetDataBuf(*xfd, *length); 
     return 0;

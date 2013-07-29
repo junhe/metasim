@@ -8,6 +8,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <sstream>
+#include <assert.h>
 
 #include "Index.h"
 #include "Util.h"
@@ -18,17 +19,16 @@ using namespace std;
 int main(int argc, char **argv)
 {
     // Handle the program arguments
-    if (argc < 3) {
+    if (argc < 2) {
         cout << "Usage: " << argv[0] 
              << " indexdirpath"
-             << " DoMerge"
              << endl;
         exit(1);
     }
 
     // input handling
     string iIndexDirPath = argv[1];
-    bool iDoMerge = (bool) atoi(argv[2]);
+    bool iDoMerge = false; // it doesn't matter in this program
 
     struct timeval startt, endt;
 
@@ -41,7 +41,8 @@ int main(int argc, char **argv)
 
     endt = Util::Gettime();
     double readdir_time = Util::GetTimeDurAB(startt, endt);
-
+    
+    assert( index_files.size() != 0 );
 
     // Read indices from files
     vector<Index *> index_pool; // to hold all indice from files
@@ -54,11 +55,11 @@ int main(int argc, char **argv)
     {
         ostringstream filepath;
         filepath << iIndexDirPath << "/" << *it;
-        cout << filepath.str() << endl;
+        //cout << filepath.str() << endl;
 
         Index *idx = new Index(iDoMerge);
         idx->readIndex(filepath.str());
-        cout << "global index size:" << idx->_globalIndex.size() << endl;
+        //cout << "global index size:" << idx->_globalIndex.size() << endl;
 
         index_pool.push_back(idx);
     }
@@ -81,7 +82,7 @@ int main(int argc, char **argv)
     endt = Util::Gettime();
     double buildglobal_time = Util::GetTimeDurAB(startt, endt);
 
-    cout << "gIndex globalIndex size:" << gIndex._globalIndex.size() << endl;
+    //cout << "gIndex globalIndex size:" << gIndex._globalIndex.size() << endl;
 
     // Performance output
     Performance pfs(25);
