@@ -17,7 +17,7 @@ using namespace std;
 int main(int argc, char **argv)
 {
     // Handle the program arguments
-    if (argc < 5) {
+    if (argc < 2) {
         cout << "Usage: " << argv[0] 
              << " indexfilepath"
              << endl;

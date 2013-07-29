@@ -180,15 +180,40 @@ Index::insertGlobalEntry( GlobalEntry *g_entry )
 int
 Index::readIndex(string physicalpath)
 {
+    off_t length = (off_t) -1;
+    void *maddr = NULL;
+    int fd;
+
+    int ret = mapIndex(&maddr, physicalpath, &fd, &length);
+    assert(ret != -1);
+    cout << "succesfully mapped" << endl;
+
+    // read into memory
+    HostEntry *h_index = (HostEntry *)maddr;
+    size_t entries = length/sizeof(HostEntry);
+
+    for (size_t i = 0; i < entries; ++i) {
+        GlobalEntry g_entry;
+        HostEntry h_entry = h_index[i];
+        cout << h_entry.show() << endl;
+        g_entry.logical_offset = h_entry.logical_offset;
+        g_entry.physical_offset = h_entry.physical_offset;
+        g_entry.id = h_entry.id;
+        g_entry.begin_timestamp = h_entry.begin_timestamp;
+        g_entry.end_timestamp = h_entry.end_timestamp;
+        g_entry.original_chunk = h_entry.id; //TODO: it is not right
+        insertGlobalEntry(&g_entry);
+    }
+
     return 0;
 }
 
 // hostindex is a physical path
 int
-Index::mapIndex(void **ibufp, string hostindex, int *xfd,
+Index::mapIndex(void **ibufp, string physicalpath, int *xfd,
                 off_t *length)
 {
-    *xfd = Util::Open(hostindex.c_str(), O_RDONLY);
+    *xfd = Util::Open(physicalpath.c_str(), O_RDONLY);
     if ( *xfd == -1 ) {
         *ibufp = NULL;
         *length = 0;
