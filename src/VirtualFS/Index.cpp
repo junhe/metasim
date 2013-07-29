@@ -205,6 +205,8 @@ Index::readIndex(string physicalpath)
         insertGlobalEntry(&g_entry);
     }
 
+    cout << "Entries in total:" << entries << endl;
+
     return 0;
 }
 

@@ -15,6 +15,7 @@
 #include <sys/mman.h>
 #include <sys/statvfs.h>
 #include <stdlib.h>
+#include <dirent.h>
 
 #include "Util.h"
 
@@ -111,6 +112,42 @@ Util::GetDataBuf(int fd, size_t length)
     }
 }
 
+vector<string>
+Util::GetIndexFiles(const char *dirpath)
+{
+    vector<string> fnames, index_files;
+    fnames = GetDirFilenames(dirpath);
+
+    // filter out the non-index files
+    vector<string>::iterator it;
+    for ( it = fnames.begin();
+          it != fnames.end();
+          ++it )
+    {
+        if ( it->find("dropping.index.") == 0 ) {
+            index_files.push_back(*it);
+        }
+    }
+    
+    return index_files;
+}
+
+
+vector<string>
+Util::GetDirFilenames(const char *dirpath)
+{
+    DIR *dpdf;
+    struct dirent *epdf;
+    vector<string> fnames;
+
+    dpdf = opendir(dirpath);
+    if (dpdf != NULL){
+       while ( (epdf = readdir(dpdf)) ){
+          fnames.push_back( string(epdf->d_name) );
+       }
+    }
+    return fnames; 
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // Performance

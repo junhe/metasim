@@ -25,6 +25,8 @@ class Util {
                                    struct timeval b);
         static off_t GetFileSize(int fd);
         static void *GetDataBuf(int fd, size_t length);
+        static std::vector<std::string> GetIndexFiles(const char *dirpath);
+        static std::vector<std::string> GetDirFilenames(const char *dirpath);
 };
 
 class Performance {
