@@ -186,7 +186,7 @@ Index::readIndex(string physicalpath)
 
     int ret = mapIndex(&maddr, physicalpath, &fd, &length);
     assert(ret != -1);
-    cout << "succesfully mapped" << endl;
+    //cout << "succesfully mapped" << endl;
 
     // read into memory
     HostEntry *h_index = (HostEntry *)maddr;
@@ -195,7 +195,7 @@ Index::readIndex(string physicalpath)
     for (size_t i = 0; i < entries; ++i) {
         GlobalEntry g_entry;
         HostEntry h_entry = h_index[i];
-        cout << h_entry.show() << endl;
+        //cout << h_entry.show() << endl;
         g_entry.logical_offset = h_entry.logical_offset;
         g_entry.physical_offset = h_entry.physical_offset;
         g_entry.id = h_entry.id;
