@@ -126,6 +126,7 @@ int main(int argc, char **argv)
     perfs.put("do_merging", iDoMerge);
     perfs.put("do_sort", iDoMerge);
     perfs.put("sort_flush_time", sort_flush_time);
+    perfs.put("mapfile", mapfilename.c_str()); 
 
     cout << perfs.showColumns();
 
