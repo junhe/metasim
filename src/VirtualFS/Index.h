@@ -57,6 +57,9 @@ class Index {
         std::string show() const;
         std::pair<std::map<off_t,GlobalEntry>::iterator,bool> insertGlobalEntry(
                             GlobalEntry *g_entry);
+        int readIndex(std::string physicalpath);
+        int mapIndex(void **ibufp, std::string hostindex, int *xfd,
+                off_t *length);
 };
 
 #endif

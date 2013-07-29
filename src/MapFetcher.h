@@ -1,6 +1,9 @@
 #ifndef __MapFetcher_H__
 #define __MapFetcher_H__
 
+#include <queue>
+#include <fstream>
+
 class HostEntry;
 
 class MapFetcher

@@ -14,3 +14,6 @@ target_link_libraries(mergewrites Index Util MapFetcher)
 add_executable(insertglobal_driver insertglobal_driver.cpp)
 target_link_libraries(insertglobal_driver Index Util MapFetcher)
 
+add_executable(readindex_driver readindex_driver.cpp)
+target_link_libraries(readindex_driver Index Util MapFetcher)
+

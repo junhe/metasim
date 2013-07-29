@@ -76,13 +76,11 @@ Index::~Index()
     }
 }
 
-
 void
 Index::addEntry( const HostEntry &entry )
 {
     _hostIndex.push_back( entry );
 }
-
 
 int
 Index::flush()
@@ -176,4 +174,42 @@ Index::insertGlobalEntry( GlobalEntry *g_entry )
                pair<off_t,GlobalEntry>( g_entry->logical_offset,
                                            *g_entry ) );
 }
+
+// readIndex reads only ONE physical index file
+// The parameter physicalpath is the path of the index file
+int
+Index::readIndex(string physicalpath)
+{
+    return 0;
+}
+
+// hostindex is a physical path
+int
+Index::mapIndex(void **ibufp, string hostindex, int *xfd,
+                off_t *length)
+{
+    *xfd = Util::Open(hostindex.c_str(), O_RDONLY);
+    if ( *xfd == -1 ) {
+        *ibufp = NULL;
+        *length = 0;
+        return -1;
+    }
+
+    *length = Util::GetFileSize(*xfd);
+    if (*length <= 0) {
+        *ibufp = NULL;
+        *length = 0;
+        return -1;
+    }
+
+    cout << "file size:" << *length << endl;
+    
+    *ibufp = Util::GetDataBuf(*xfd, *length); 
+    return 0;
+}
+
+
+
+
+
 

@@ -4,6 +4,14 @@
 #include <vector>
 #include <map>
 
+#ifndef MAP_NOCACHE
+// this is a way to tell mmap not to waste buffer cache.  since we just
+// read the index files once sequentially, we don't want it polluting cache
+// unfortunately, not all platforms support this (but they're small)
+#define MAP_NOCACHE 0
+#endif
+
+
 class Util {
     public:
         static ssize_t WriteN(const void *vptr, size_t n, int fd);
@@ -15,6 +23,8 @@ class Util {
         static struct timeval Gettime();
         static double GetTimeDurAB(struct timeval a,
                                    struct timeval b);
+        static off_t GetFileSize(int fd);
+        static void *GetDataBuf(int fd, size_t length);
 };
 
 class Performance {

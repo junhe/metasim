@@ -12,6 +12,9 @@
 #include <fstream>
 #include <iomanip>
 #include <assert.h>
+#include <sys/mman.h>
+#include <sys/statvfs.h>
+#include <stdlib.h>
 
 #include "Util.h"
 
@@ -88,6 +91,26 @@ Util::GetTimeDurAB(struct timeval a,
     timersub(&b, &a, &dur);
     return dur.tv_sec + dur.tv_usec/1000000.0;
 }
+
+off_t
+Util::GetFileSize(int fd)
+{
+    return lseek(fd, 0, SEEK_END);
+}
+
+void *
+Util::GetDataBuf(int fd, size_t length) 
+{
+    void *b;
+
+    b = mmap(NULL, length, PROT_READ, MAP_SHARED|MAP_NOCACHE, fd, 0);
+    if (b == MAP_FAILED) {
+        return NULL;
+    } else {
+        return b;
+    }
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 // Performance
