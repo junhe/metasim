@@ -90,6 +90,7 @@ int main(int argc, char **argv)
     pfs.put("buildglobal_time", buildglobal_time);
     pfs.put("globalindex_size", (int)gIndex._globalIndex.size());
     pfs.put("exefile", argv[0]);
+    pfs.put("index_dir", iIndexDirPath.c_str());
 
     cout << pfs.showColumns() << endl;
     return 0;
