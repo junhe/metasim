@@ -168,7 +168,7 @@ Index::show() const
 }
 
 pair<map<off_t,GlobalEntry>::iterator,bool> 
-Index::insertGlobalEntry( GlobalEntry *g_entry ) 
+Index::insertGlobalEntry( const GlobalEntry *g_entry ) 
 {
     return _globalIndex.insert(
                pair<off_t,GlobalEntry>( g_entry->logical_offset,
@@ -235,7 +235,18 @@ Index::mapIndex(void **ibufp, string physicalpath, int *xfd,
     return 0;
 }
 
-
+// Merge (insert) global entries of 'other'
+// to this index
+void
+Index::merge(const Index *other)
+{
+    map<off_t, GlobalEntry>::const_iterator oe_it; // it for other entry
+    const map<off_t, GlobalEntry> &og = other->_globalIndex;
+    for (oe_it = og.begin(); oe_it != og.end(); ++oe_it) {
+        insertGlobalEntry(& oe_it->second ); // TODO: chunk id is not handled
+    }
+    return;
+}
 
 
 

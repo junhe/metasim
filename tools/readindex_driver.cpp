@@ -52,15 +52,21 @@ int main(int argc, char **argv)
         index_pool.push_back(idx);
     }
 
+    Index gIndex(iDoMerge);
 
-    // clean index pool
+    // merge and delete merged indices
     vector<Index *>::iterator pool_it;
     for ( pool_it = index_pool.begin() ;
           pool_it != index_pool.end() ;
           ++pool_it )
     {
+        gIndex.merge(*pool_it);
         delete *pool_it;
     }
+
+    cout << "gIndex globalIndex size:" << gIndex._globalIndex.size() << endl;
+
+    return 0;
 }
     
 
