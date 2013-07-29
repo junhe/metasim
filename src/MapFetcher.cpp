@@ -37,18 +37,18 @@ int
 MapFetcher::readEntryFromStream(HostEntry &entry)
 {
     string line;
-    if (getline(_mapStream, line)) {
+    while (getline(_mapStream, line)) {
         istringstream iss(line);
         
         if ( !line2entry( line, entry ) == 0 ) {
-            cerr << "failed to line2entry()" << endl;
-            exit(-1);
+            cerr << "failed to line2entry(), might be a comment" << endl;
+            continue; // skip this, and fetch the next one
         } else {
             return 1;
         }
-    } else {
-        return EOF;
     }
+
+    return EOF;
 }
 
 // convert a text line to a HostEntry
