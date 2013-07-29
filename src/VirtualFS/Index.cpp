@@ -59,7 +59,8 @@ Index::Index(const char *physical_path, bool compress_contiguous)
 
 {
     // open physical file for index
-    _index_fd = Util::Open(_physical_path.c_str(), O_CREAT|O_WRONLY);
+    _index_fd = Util::Open(_physical_path.c_str(), 
+                        O_CREAT|O_TRUNC|O_WRONLY);
     assert( _index_fd != -1 );
 }
 
