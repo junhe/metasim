@@ -128,6 +128,7 @@ int main(int argc, char **argv)
     perfs.put("sort_flush_time", sort_flush_time);
     perfs.put("mapfile", mapfilename.c_str()); 
     perfs.put("do_flush", iDoFlush);
+    perfs.put("fetchbufsize", iFetchSize);
 
     cout << perfs.showColumns();
 
