@@ -124,7 +124,7 @@ int main(int argc, char **argv)
     perfs.put("speed", (cnt/add_time));
     perfs.put("final_size", newcnt);
     perfs.put("do_merging", iDoMerge);
-    perfs.put("do_sort", iDoMerge);
+    perfs.put("do_sort", iDoSort);
     perfs.put("sort_flush_time", sort_flush_time);
     perfs.put("mapfile", mapfilename.c_str()); 
     perfs.put("do_flush", iDoFlush);
