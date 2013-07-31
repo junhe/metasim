@@ -99,6 +99,7 @@ int main(int argc, char **argv)
 
     // cleanup
     int newcnt = 0;
+    int newcnt2 = 0; // after sorting and merging
     map<pid_t, Index*>::iterator it;
 
     start = Util::Gettime();
@@ -108,6 +109,7 @@ int main(int argc, char **argv)
             it->second->sortEntries(); // sort entries
             it->second->mergeEntries(); // sort entries
         }
+        newcnt2 += it->second->_hostIndex.size();
         if (iDoFlush) {
             it->second->flush();
         }
@@ -123,7 +125,8 @@ int main(int argc, char **argv)
     perfs.put("cnt", cnt);
     perfs.put("add_time", add_time);
     perfs.put("speed", (cnt/add_time));
-    perfs.put("final_size", newcnt);
+    perfs.put("size_afterdumbmerge", newcnt);
+    perfs.put("size_aftersortandmerge", newcnt2);
     perfs.put("do_merging", iDoMerge);
     perfs.put("do_sort", iDoSort);
     perfs.put("sort_flush_time", sort_flush_time);
