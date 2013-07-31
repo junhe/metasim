@@ -100,6 +100,7 @@ Index::flush()
         cerr << "Failed to write to Index file" << endl;
         exit(-1);
     }
+    Util::Flush(_index_fd);
     _hostIndex.clear();
     return((ret < 0) ? ret : 0);
 }
