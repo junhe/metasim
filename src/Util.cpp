@@ -62,6 +62,11 @@ Util::Close(int fd)
     return close(fd);
 }
 
+int
+Util::Flush(int fd)
+{
+    return fsync(fd);
+}
 
 void
 Util::replaceSubStr( string del, string newstr, string &line, int startpos) 

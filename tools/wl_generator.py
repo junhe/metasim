@@ -1,10 +1,10 @@
 import sys
 
 if __name__ == "__main__":
-    wlen = 1
+    wlen = 2
     wstride = 2
-    local_nwrites = 1000
-    npid = 6
+    local_nwrites = 100000
+    npid = 64
     
     for wpid in range(0, npid):
         for i in range(0, local_nwrites):

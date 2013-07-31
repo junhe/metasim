@@ -17,6 +17,7 @@ class Util {
         static ssize_t WriteN(const void *vptr, size_t n, int fd);
         static int Open(const char *fname, int flag);
         static int Close(int fd);
+        static int Flush(int fd);
         static void replaceSubStr( std::string del, 
                                    std::string newstr, 
                                    std::string &line, int startpos = 0 );
