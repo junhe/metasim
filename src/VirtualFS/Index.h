@@ -54,6 +54,7 @@ class Index {
                        double begin_timestamp, double end_timestamp );
         int flush();
         void sortEntries();
+        void mergeEntries();
         std::string show() const;
         std::pair<std::map<off_t,GlobalEntry>::iterator,bool> insertGlobalEntry(
                             const GlobalEntry *g_entry);

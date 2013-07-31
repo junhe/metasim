@@ -250,6 +250,28 @@ Index::merge(const Index *other)
     return;
 }
 
+void
+Index::mergeEntries()
+{
+    vector<HostEntry> hent2;
+    vector<HostEntry>::const_iterator cit;
 
+    for ( cit = _hostIndex.begin() ;
+          cit != _hostIndex.end() ;
+          ++cit ) 
+    {
+        if ( !hent2.empty() &&
+                hent2.back().id == cit->id &&
+                hent2.back().logical_offset +
+                (off_t)hent2.back().length == cit->logical_offset) 
+        {
+            hent2.back().end_timestamp = cit->end_timestamp;
+            hent2.back().length += cit->length;
+        } else {
+            hent2.push_back(*cit);
+        }
+    }
+    _hostIndex = hent2;
+}
 
 

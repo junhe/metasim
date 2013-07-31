@@ -106,6 +106,7 @@ int main(int argc, char **argv)
         newcnt += it->second->_hostIndex.size();
         if (iDoSort) {
             it->second->sortEntries(); // sort entries
+            it->second->mergeEntries(); // sort entries
         }
         if (iDoFlush) {
             it->second->flush();
